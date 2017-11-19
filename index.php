@@ -12,28 +12,41 @@ class collection {
         return $model;
     }
     
-    static public function findAll() {
+    static public function find($id) {
+    
+        $columnName="*";
+        $condition=" id=$id";
         $db = dbConn::getConnection();
         $tableName = get_called_class();
-        $sql = 'SELECT * FROM ' . $tableName;
+        $sql=buildSqlQuery::selectQuery($columnName,$tableName,$condition);        
         $statement = $db->prepare($sql);
         $statement->execute();
         $class = static::$modelName;
-        $statement->setFetchMode(PDO::FETCH_CLASS, $class);
-        
-        $recordsSet =  $statement->fetchAll(PDO::FETCH_ASSOC);
-        //print_r($recordsSet);
+        $statement->setFetchMode(PDO::FETCH_CLASS, $class);        
+        $recordsSet =  $statement->fetchAll(PDO::FETCH_ASSOC);        
         return $recordsSet;
     }
     
+    static public function findAll() {
+    
+        $columnName="*";
+        $condition=" 1=1 ";
+        $db = dbConn::getConnection();
+        $tableName = get_called_class();
+        $sql=buildSqlQuery::selectQuery($columnName,$tableName,$condition);        
+        $statement = $db->prepare($sql);
+        $statement->execute();
+        $class = static::$modelName;
+        $statement->setFetchMode(PDO::FETCH_CLASS, $class);        
+        $recordsSet =  $statement->fetchAll(PDO::FETCH_ASSOC);        
+        return $recordsSet;
+    }    
 }
 
 class account extends model {
-
     public function __construct()
     {
-        $this->tableName = 'accounts';
-	
+        $this->tableName = 'accounts';	
     }
 }
 
@@ -48,13 +61,11 @@ class model {
         }
         $db = dbConn::getConnection();
         $statement = $db->prepare($sql);
-        $statement->execute();
-        //$statement->fetchAll(PDO::FETCH_ASSOC)
+        $statement->execute();        
         $tableName = get_called_class();
         $array = get_object_vars($this);
         $columnString = implode(',', $array);
-        $valueString = ":".implode(',:', $array);
-       // echo "INSERT INTO $tableName (" . $columnString . ") VALUES (" . $valueString . ")</br>";
+        $valueString = ":".implode(',:', $array);       
         echo 'I just saved record: ' . $this->id;
     }
     private function insert() {
@@ -71,8 +82,6 @@ class model {
     }
 }
 
-
-
 class dbConn{
     //variable to hold connection object.
     protected static $db;        
@@ -82,11 +91,11 @@ class dbConn{
         try {
         
         $serverName = "sql1.njit.edu";
-    $userName = "ara59";
-    $password = "CkyYZ4sSq";
-    $tableName= "accounts";
-    $condition="id<6";
-    $columnName="*";
+        $userName = "ara59";
+        $password = "CkyYZ4sSq";
+        $tableName= "accounts";
+        $condition="id<6";
+        $columnName="*";
             // assign PDO object to db variable
             self::$db = new PDO( 'mysql:host=' . $serverName .';dbname=' . $userName, $userName, $password );
             self::$db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
@@ -108,60 +117,53 @@ class dbConn{
     }
 }
 
-class createHtml extends pdoConnection{
-    
-    //public function __construct($hmtlObj){
+class table extends createBody{
+           
+    static public function createTable($htmlEntity){
         
-      //  $this->html.=createHtml::generateHtml($hmtlObj);        
-    //}
-    
-    static public function generateHtml($htmlEntity){
-        $counter=0;
-        $html='';     
-        //$html.="Number of records: ".$counter;   
+        $html='';           
         $html.='<table border="1">';
         
         foreach($htmlEntity as $output){
           $html.='<tr>';
           foreach($output as $data){            
               $html.='<td>'.$data.'</td>';                      
-          }
-          $counter++;
+          }          
           $html.='</tr>';
         }
         $html.='</table>';        
-        //stringFunctions::printOutput("Number of records: ".$counter);
         print_r($html);        
     }
 }
 
-//Used to Open and close PDO connection and fetch data from database
-class pdoConnection {
+class createBody {
     protected $html;  
     
     public function __construct(){        
         $this->html .= '<html>';        
         $this->html .= '<body>';        
     }        
-    
-    public static function fetchData($connectionString,$query){
-        $stmt = $connectionString->prepare($query); 
-        $stmt->execute();
-        return $stmt->fetchAll();
-    }    
-    
+        
     public function __destruct(){
         $this->html .= '</body></html>';        
-        //stringFunctions::printOutput($this->html);
     }  
 }
 
+class buildSqlQuery{
+    static public function selectQuery($columnName,$tableName,$condition){
+        return "SELECT ".$columnName." FROM ". $tableName ." where ".$condition;
+    }
+    
+    static public function selectCount($columnName,$tableName,$condition){
+        return "SELECT count(".$columnName.") FROM ". $tableName ." where ".$condition;
+    }
+}
 
-        $records = accounts::findAll();
-        //print_r($records);
-        createHtml::generateHtml($records);
-        //$result=new createHtml($records);
-        //print_r($result);
-
-
+        $records = accounts::find(1);        
+        table::createTable($records);
+        
+        $records = accounts::findAll();        
+        table::createTable($records);
+        
+        
 ?>
