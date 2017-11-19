@@ -6,6 +6,10 @@ class accounts extends collection {
     protected static $modelName = 'account';
 }
 
+class todos extends collection {
+    protected static $modelName = 'todo';
+}
+
 class collection {
     static public function create() {
         $model = new static::$modelName;
@@ -28,7 +32,7 @@ class collection {
     }
     
     static public function findAll() {
-    
+                
         $columnName="*";
         $condition=" 1=1 ";
         $db = dbConn::getConnection();
@@ -47,6 +51,13 @@ class account extends model {
     public function __construct()
     {
         $this->tableName = 'accounts';	
+    }
+}
+
+class todo extends model {
+    public function __construct()
+    {
+        $this->tableName = 'todos';	
     }
 }
 
@@ -82,11 +93,9 @@ class model {
     }
 }
 
-class dbConn{
-    //variable to hold connection object.
+class dbConn{    
     protected static $db;        
-    
-    //private construct - class cannot be instantiated externally.
+        
     private function __construct() {
         try {
         
@@ -96,23 +105,19 @@ class dbConn{
         $tableName= "accounts";
         $condition="id<6";
         $columnName="*";
-            // assign PDO object to db variable
+                    
             self::$db = new PDO( 'mysql:host=' . $serverName .';dbname=' . $userName, $userName, $password );
             self::$db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
         }
-        catch (PDOException $e) {
-            //Output error - would normally log this to error file rather than output to user.
+        catch (PDOException $e) {            
             echo "Connection Error: " . $e->getMessage();
         }
     }
-    // get connection function. Static method - accessible without instantiation
-    public static function getConnection() {
-        //Guarantees single instance, if no connection object exists then create one.
-        if (!self::$db) {
-            //new connection object.
+        
+    public static function getConnection() {    
+        if (!self::$db) {            
             new dbConn();
-        }
-        //return connection.
+        }        
         return self::$db;
     }
 }
@@ -158,12 +163,17 @@ class buildSqlQuery{
         return "SELECT count(".$columnName.") FROM ". $tableName ." where ".$condition;
     }
 }
-
+        
         $records = accounts::find(1);        
         table::createTable($records);
         
         $records = accounts::findAll();        
         table::createTable($records);
         
+        $records = todos::find(1);        
+        table::createTable($records);
+        
+        $records = todos::findAll();        
+        table::createTable($records);
         
 ?>
