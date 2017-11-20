@@ -55,6 +55,14 @@ class account extends model {
 }
 
 class todo extends model {
+    public $id;
+    public $owneremail;
+    public $ownerid;
+    public $createddate;
+    public $duedate;
+    public $message;
+    public $isdone;
+
     public function __construct()
     {
         $this->tableName = 'todos';	
@@ -65,28 +73,31 @@ class model {
     protected $tableName;
     public function save()
     {
-        if ($this->id = '') {
-            $sql = $this->insert();
+        //echo 'Save Funct';
+        //echo $this->id;
+        $tableName=$this->tableName;
+        $array = get_object_vars($this);        
+        $columnString = implode(',', array_slice(array_keys($array),0,count($array)-1));
+        $valueString = 20 . implode(',', array_slice($array,0,count($array)-1));
+        
+        if ($this->id == '') {
+            $sql = $this->insert($tableName,$columnString,$valueString);
         } else {
             $sql = $this->update();
         }
         $db = dbConn::getConnection();
         $statement = $db->prepare($sql);
         $statement->execute();        
-        $tableName = get_called_class();
-        $array = get_object_vars($this);
-        $columnString = implode(',', $array);
-        $valueString = ":".implode(',:', $array);       
-        echo 'I just saved record: ' . $this->id;
+        //$tableName = get_called_class();
+        
     }
-    private function insert() {
-        $sql = 'sometthing';
+    private function insert($tableName,$columnString,$valueString) {
+        $sql = buildSqlQuery::insertQuery($tableName,$columnString,$valueString);
         return $sql;
     }
     private function update() {
-        $sql = 'sometthing';
-        return $sql;
-        echo 'I just updated record' . $this->id;
+        $sql = buildSqlQuery::updateQuery($tableName,$columnString,$valueString);
+        return $sql;        
     }
     public function delete() {
         echo 'I just deleted record' . $this->id;
@@ -137,7 +148,7 @@ class table extends createBody{
           $html.='</tr>';
         }
         $html.='</table>';        
-        print_r($html);        
+        return $html;        
     }
 }
 
@@ -157,23 +168,51 @@ class createBody {
 class buildSqlQuery{
     static public function selectQuery($columnName,$tableName,$condition){
         return "SELECT ".$columnName." FROM ". $tableName ." where ".$condition;
-    }
-    
-    static public function selectCount($columnName,$tableName,$condition){
-        return "SELECT count(".$columnName.") FROM ". $tableName ." where ".$condition;
+    }    
+   
+      static public function insertQuery($tableName,$columnString,$valueString){
+        return "INSERT INTO $tableName ($columnString) VALUES($valueString)";                
     }
 }
-        
+
+class stringFunctions{
+    
+    public static function printOutput($message){
+        print_r($message);
+    }
+}       
+        $result='';  
+        $result.='Record:';
         $records = accounts::find(1);        
-        table::createTable($records);
+        $result.=table::createTable($records);
         
+        $result.='Records:';
         $records = accounts::findAll();        
-        table::createTable($records);
+        $result.=table::createTable($records);
         
+        $result.='Record:';
         $records = todos::find(1);        
-        table::createTable($records);
+        $result.=table::createTable($records);
         
+        $result.='Records:';
         $records = todos::findAll();        
-        table::createTable($records);
+        $result.=table::createTable($records);
         
+        stringFunctions::printOutput($result);
+        
+        
+        $record = new todo();
+        $record->id = '';
+        $record->owneremail = '"xyz@njit.edu"';
+        $record->ownerid=8;
+        $record->createddate='"2017-12-19 00:00:00"';
+        $record->duedate='"2017-12-20 00:00:00"';
+        $record->message='"Test Insert"';
+        $record->isdone=0;
+        $record->save();
+        //print_r($record);
+        //$record = todos::create();
+        //print_r($record);
+
+
 ?>
