@@ -78,11 +78,13 @@ class model {
         
         if ($this->id == '') {
             $columnString = implode(',', array_slice(array_keys($array),0,count($array)-1));
-            $valueString = 20 . implode(',', array_slice($array,0,count($array)-1));
+            $valueString = 15 . implode(',', array_slice($array,0,count($array)-1));
         
             $sql = $this->insert($tableName,$columnString,$valueString);
+            $this->executeQuery($sql);
         } 
-        else {            
+        else {      
+                   
             $valueString='';                       
             
             foreach($array as $key=>$values){
@@ -92,10 +94,14 @@ class model {
             }
             $valueString=substr($valueString,0,strlen($valueString)-1);        
             $sql = $this->update($tableName,$valueString,$this->id);
-        }
-        $db = dbConn::getConnection();
-        $statement = $db->prepare($sql);
-        $statement->execute();        
+            $this->executeQuery($sql);
+        }                
+    }
+    
+    public function remove(){
+        $tableName=$this->tableName;
+        $sql = $this->delete($tableName,$this->id);
+        $this->executeQuery($sql);
     }
     private function insert($tableName,$columnString,$valueString) {
         $sql = buildSqlQuery::insertQuery($tableName,$columnString,$valueString);
@@ -105,10 +111,38 @@ class model {
         $sql = buildSqlQuery::updateQuery($tableName,$columnString,$valueString);
         return $sql;        
     }
-    public function delete() {
-        echo 'I just deleted record' . $this->id;
+    public function delete($tableName,$id) {
+        $sql = buildSqlQuery::deleteQuery($tableName,$id);
+        return $sql;        
     }
+    
+    public function executeQuery($sql){
+        $db = dbConn::getConnection();
+        $statement = $db->prepare($sql);
+        $statement->execute();
+    }
+    
 }
+
+class buildSqlQuery{
+    static public function selectQuery($columnName,$tableName,$condition){
+        return "SELECT ".$columnName." FROM ". $tableName ." where ".$condition;
+    }    
+   
+    static public function insertQuery($tableName,$columnString,$valueString){
+        return "INSERT INTO $tableName ($columnString) VALUES($valueString)";                
+    }
+    
+    static public function updateQuery($tableName,$columnString,$id){
+        return "UPDATE $tableName SET $columnString WHERE id=$id";                        
+    }    
+    
+    static public function deleteQuery($tableName,$id){
+        return "DELETE FROM $tableName WHERE id=$id";                        
+    }    
+
+}
+
 
 class dbConn{    
     protected static $db;        
@@ -171,20 +205,6 @@ class createBody {
     }  
 }
 
-class buildSqlQuery{
-    static public function selectQuery($columnName,$tableName,$condition){
-        return "SELECT ".$columnName." FROM ". $tableName ." where ".$condition;
-    }    
-   
-    static public function insertQuery($tableName,$columnString,$valueString){
-        return "INSERT INTO $tableName ($columnString) VALUES($valueString)";                
-    }
-    
-    static public function updateQuery($tableName,$columnString,$condition){
-        return "UPDATE $tableName SET $columnString WHERE id=$condition";                        
-    }    
-}
-
 class stringFunctions{
     
     public static function printOutput($message){
@@ -192,42 +212,46 @@ class stringFunctions{
     }
 }       
         $result='';  
-        $result.='Record:';
+        $result.='Select record from Accounts:';
         $records = accounts::find(1);        
-        $result.=table::createTable($records);
+        $result.=table::createTable($records).'<hr>';
         
-        $result.='Records:';
+        $result.='Select all records from Accounts:';
         $records = accounts::findAll();        
-        $result.=table::createTable($records);
+        $result.=table::createTable($records).'<hr>';
         
-        $result.='Record:';
+        $result.='Select record from Todos:';
         $records = todos::find(1);        
-        $result.=table::createTable($records);
+        $result.=table::createTable($records).'<hr>';
         
-        $result.='Records:';
+        $result.='Select all record from Todos:';
         $records = todos::findAll();        
-        $result.=table::createTable($records);
+        $result.=table::createTable($records).'<hr>';
         
+        
+        
+        
+        $recordDelete = new todo();
+        $recordDelete->id =15;
+        $recordDelete->remove();
+        
+        $recordInsert = new todo();
+        $recordInsert->id = '';
+        $recordInsert->owneremail = '"xyz@njit.edu"';
+        $recordInsert->ownerid=8;
+        $recordInsert->createddate='"2017-12-19 00:00:00"';
+        $recordInsert->duedate='"2017-12-20 00:00:00"';
+        $recordInsert->message='"Test Insert"';
+        $recordInsert->isdone=0;
+        $recordInsert->save();
+        $result.='Record Inserted Successfully!!<br>';
+        
+        $recordUpdate = new todo();
+        $recordUpdate->id =12;
+        $recordUpdate->ownerid=1001;
+        $recordUpdate->createddate='"2017-12-19 00:00:00"';        
+        $recordUpdate->save();
+        $result.='Record Updated Successfully!!';        
         stringFunctions::printOutput($result);
-        
-        
-        $record = new todo();
-        //$record->id = '';
-        //$record->owneremail = '"xyz@njit.edu"';
-        //$record->ownerid=8;
-        //$record->createddate='"2017-12-19 00:00:00"';
-        //$record->duedate='"2017-12-20 00:00:00"';
-        //$record->message='"Test Insert"';
-        //$record->isdone=0;
-        //$record->save();
-        
-        $record->id =20;
-        $record->ownerid=1001;
-        $record->createddate='"2017-12-19 00:00:00"';        
-        $record->save();
-        //print_r($record);
-        //$record = todos::create();
-        //print_r($record);
-
 
 ?>
